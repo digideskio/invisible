@@ -23,7 +23,10 @@ module ::Invisible
       @status  = 200
       @headers = { 'Content-Type' => 'text/html' }
       @body    = nil
+      @env     = env
       @request = Rack::Request.new(env)
+      
+      supplement_params
     end
 
     def call(action)
@@ -33,7 +36,11 @@ module ::Invisible
     
     protected
       def params
-        @params ||= @request.params.symbolize_keys
+        @params ||= @request.params.to_hash.with_indifferent_access
+      end
+      
+      def supplement_params
+        params.merge!(Hash.from_xml(@request.body.string).with_indifferent_access) if %w( application/xml text/xml application/x-xml ).include?(@request['CONTENT_TYPE']) && !@request.body.string.blank?
       end
   end
   
