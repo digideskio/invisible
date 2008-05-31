@@ -11,7 +11,7 @@ module ::Invisible
     
     def call(env)
       _, controller, action = env["PATH_INFO"].split("/")
-      controllers_module.const_get("#{(controller || 'home').capitalize}Controller").new(env).call(action_for(env['REQUEST_METHOD'], action))
+      controllers_module.const_get("#{(controller || 'home').camelize}Controller").new(env).call(action_for(env['REQUEST_METHOD'], action))
     end
     
     protected
