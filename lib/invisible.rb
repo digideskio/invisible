@@ -3,12 +3,15 @@
 module ::Invisible
   
   class Application
+    cattr_accessor :controllers_module
+    self.controllers_module = Object
+    
     MEMBER_ACTIONS     = { 'PUT'  => :update, 'DELETE' => :destroy, 'GET' => :show }
     COLLECTION_ACTIONS = { 'POST' => :create, 'GET'    => :index }
     
     def call(env)
       _, controller, action = env["PATH_INFO"].split("/")
-      Object.const_get("#{(controller || 'home').capitalize}Controller").new(env).call(action_for(env['REQUEST_METHOD'], action))
+      controllers_module.const_get("#{(controller || 'home').capitalize}Controller").new(env).call(action_for(env['REQUEST_METHOD'], action))
     end
     
     protected
