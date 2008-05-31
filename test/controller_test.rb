@@ -43,7 +43,7 @@ Expectations do
 
     c = Controller.new(Rack::MockRequest.env_for('/test'))
     c.instance_variable_get('@request').stubs(:body).returns(StringIO.new << xml)
-    c.instance_variable_get('@request').stubs(:[]).returns('application/xml')
+    c.instance_variable_get('@request').env['CONTENT_TYPE'] = 'application/xml'
     c.send(:supplement_params)
     c.send(:params)[:queue_item]
   end

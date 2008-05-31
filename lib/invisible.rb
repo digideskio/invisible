@@ -44,7 +44,7 @@ module ::Invisible
       end
       
       def supplement_params
-        params.merge!(Hash.from_xml(@request.body.string).with_indifferent_access) if %w( application/xml text/xml application/x-xml ).include?(@request['CONTENT_TYPE']) && !@request.body.string.blank?
+        params.merge!(Hash.from_xml(@request.body.string).with_indifferent_access) if %w( application/xml text/xml application/x-xml ).include?(@request.env['CONTENT_TYPE']) && !@request.body.string.blank?
       end
   end
   
