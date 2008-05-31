@@ -1,37 +1,40 @@
-# Start w/ thin start -r invisible.rb
-require 'tenjin'
+%w(rubygems activesupport thin rack).each { |l| require l }
 
 module ::Invisible
-  class Adapter
-    def initialize
-      @template = Tenjin::Engine.new(:postfix=>'.rbhtml', :layout=>'../layout.rbhtml', :path=>'home')
-      @file = Rack::File.new('public')
-    end  
+  
+  class Application
+    MEMBER_ACTIONS     = { 'PUT'  => :update, 'DELETE' => :destroy, 'GET' => :show }
+    COLLECTION_ACTIONS = { 'POST' => :create, 'GET'    => :index }
+    
     def call(env)
-      path = env['PATH_INFO']
-      if path.include?('.')
-        @file.call(env)
-      else
-        _, controller, action = env['PATH_INFO'].split('/')
-        Invisible.const_get("#{(controller || 'home').capitalize}Controller").new(@template, env).call(action || 'index')
-      end
+      _, controller, action = env["PATH_INFO"].split("/")
+      Object.const_get("#{(controller || 'home').capitalize}Controller").new(env).call(action_for(env['REQUEST_METHOD'], action))
     end
-  end
-  class Controller
-    def initialize(template, env)
-      @template, @status, @env, @headers = template, 200, env, {'Content-Type' => 'text/html'}
-    end
-    def call(action)
-      send(action)
-      render(action) unless @body
-      [@status, @headers.merge('Content-Length'=>@body.size.to_s), [@body]]
-    end
+    
     protected
-      def render(action=nil)
-        @body = @template.render(action.to_sym, instance_variables.inject({}) {|h,v| h[v[1..-1]] = instance_variable_get(v); h})
+      def action_for(method, path)
+        action_hash = path.blank? ? COLLECTION_ACTIONS : MEMBER_ACTIONS
+        action_hash[method]
       end
   end
-end
 
-require 'app/controllers'
-run Invisible::Adapter.new
+  class Controller
+    def initialize(env)
+      @status  = 200
+      @headers = { 'Content-Type' => 'text/html' }
+      @body    = nil
+      @request = Rack::Request.new(env)
+    end
+
+    def call(action)
+      @body = send(action)
+      [@status, @headers, @body]
+    end
+    
+    protected
+      def params
+        @params ||= @request.params.symbolize_keys
+      end
+  end
+  
+end
