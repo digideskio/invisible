@@ -1,4 +1,4 @@
-%w(rubygems activesupport thin rack).each { |l| require l }
+%w(rubygems activesupport rack).each { |l| require l }
 
 module ::Invisible
   
